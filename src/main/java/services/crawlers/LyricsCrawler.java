@@ -1,9 +1,7 @@
 package services.crawlers;
 
-import models.Record;
 import org.htmlunit.BrowserVersion;
 import org.htmlunit.WebClient;
-import org.htmlunit.html.DomNode;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
 
