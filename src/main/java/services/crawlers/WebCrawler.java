@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * This class uses a web client to extract necessary information from given website.
+ */
 public class WebCrawler extends Crawler {
 
     private static WebClient webClient;
@@ -25,6 +28,12 @@ public class WebCrawler extends Crawler {
         return webClient;
     }
 
+    /**
+     * Extracts links from given URL and XPath.
+     * @param url url of the web page
+     * @param xPath XPath expression to given HTML Element
+     * @return a list of extracted links.
+     */
     @Override
     public LinkedList<String> extractLinks(String url, String xPath) throws IOException {
         LinkedList<String> extractedLinks = new LinkedList<>();
@@ -41,6 +50,13 @@ public class WebCrawler extends Crawler {
         return extractedLinks;
     }
 
+    /**
+     * Extracts the required data from given URL and XPath expression.
+     * @param url url of the web page
+     * @param xPath XPath expression to given HTML Element
+     *
+     * @return found data from given arguments
+     */
     @Override
     public String extractContent(String url, String xPath) throws IOException {
         WebClient client = getWebClient();
