@@ -29,8 +29,7 @@ public class WebCrawlerTest {
         Configuration assertionConfig = getConfig(ASSERTION_PAGE_LINKS_PATH);
         Configuration xPathConfig = getConfig(XPATH_CONFIG_FILE_PATH);
 
-        LinkedList<String> extractedLinks = crawler().extractLinks(
-                MOCK_HOME_PAGE_FILEPATH,
+        LinkedList<String> extractedLinks = crawler(MOCK_HOME_PAGE_FILEPATH).extractLinks(
                 xPathConfig.getString("xpath.alphabeticalLinks"));
 
         assertEquals(extractedLinks.size(), 29);
@@ -54,7 +53,7 @@ public class WebCrawlerTest {
         String[] pages = {MOCK_ARTIST_PAGE_LETTER_O, MOCK_ARTIST_PAGE_LETTER_G};
 
         for (String page : pages) {
-            LinkedList<String> links = crawler().extractLinks(page, xPathConfig.getString("xpath.authorLinks"));
+            LinkedList<String> links = crawler(page).extractLinks(xPathConfig.getString("xpath.authorLinks"));
 
             extractedLinks.addAll(links);
         }
@@ -73,17 +72,15 @@ public class WebCrawlerTest {
         Configuration xPathConfig = getConfig(XPATH_CONFIG_FILE_PATH);
         Configuration assertionConfig = getConfig(ASSERTION_PAGE_LINKS_PATH);
 
-        String text = crawler().extractContent(
-                MOCK_LYRICS_PAGE,
-                xPathConfig.getString("xpath.lyricsExample"));
+        String text = crawler(MOCK_LYRICS_PAGE).extractContent(xPathConfig.getString("xpath.lyricsExample"));
 
         assertEquals(text.getClass(), String.class);
         assertTrue(text.contains(assertionConfig.getString("assertion.containingTextContent")));
 
     }
 
-    private static WebCrawler crawler() {
-        return new WebCrawler();
+    private static WebCrawler crawler(String URL) {
+        return new WebCrawler(URL);
     }
 
     private static Configuration getConfig(String configPath) throws ConfigurationException {
