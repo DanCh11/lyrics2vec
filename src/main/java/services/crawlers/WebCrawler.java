@@ -5,7 +5,7 @@ import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,8 +35,8 @@ public class WebCrawler {
      * @param xPath XPath expression to given HTML Element
      * @return a list of extracted links.
      */
-    public LinkedList<String> extractLinks(String xPath) throws IOException {
-        LinkedList<String> extractedLinks = new LinkedList<>();
+    public ArrayList<String> extractLinks(String xPath) throws IOException {
+        ArrayList<String> extractedLinks = new ArrayList<>();
         WebClient client = getWebClient();
         page = client.getPage(URL);
         List<HtmlAnchor> links = page.getByXPath(xPath);
