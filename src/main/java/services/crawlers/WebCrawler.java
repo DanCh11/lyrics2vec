@@ -12,13 +12,8 @@ import java.util.List;
  * This class uses a web client to extract necessary information from given website.
  */
 public class WebCrawler {
-    private static WebClient webClient;
+    private static WebClient webClient = getWebClient();
     private static HtmlPage page;
-    private final String URL;
-
-    public WebCrawler(String URL) {
-        this.URL = URL;
-    }
 
     private static WebClient getWebClient() {
         if (webClient == null) {
@@ -32,19 +27,42 @@ public class WebCrawler {
 
     /**
      * Extracts links from given URL and XPath.
+     * @param URL given URL
      * @param xPath XPath expression to given HTML Element
      * @return a list of extracted links.
      */
-    public ArrayList<String> extractLinks(String xPath) throws IOException {
-        ArrayList<String> extractedLinks = new ArrayList<>();
-        WebClient client = getWebClient();
-        page = client.getPage(URL);
+    public List<String> extractLinks(String URL, String xPath) throws IOException {
+        List<String> extractedLinks = new ArrayList<>();
+        page = webClient.getPage(URL);
         List<HtmlAnchor> links = page.getByXPath(xPath);
 
         for (HtmlAnchor link : links) {
             if (link != null) {
                 String href = link.getHrefAttribute();
-                extractedLinks.add(href);
+                extractedLinks.add(URL + href);
+            }
+        }
+        return extractedLinks;
+    }
+
+    /**
+     * Extracts links from multiple given URLS and XPath.
+     * @param URLS given list of urls
+     * @param xPath XPath expression to given HTML Element
+     * @return a list of extracted links.
+     */
+    public List<String> extractLinksFromMultiplePages(List<String> URLS, String xPath) throws IOException {
+        List<String> extractedLinks = new ArrayList<>();
+
+        for (String URL : URLS) {
+            page = webClient.getPage(URL);
+            List<HtmlAnchor> links = page.getByXPath(xPath);
+
+            for (HtmlAnchor link : links) {
+                if (link != null) {
+                    String href = link.getHrefAttribute();
+                    extractedLinks.add(URL + href);
+                }
             }
         }
         return extractedLinks;
@@ -52,13 +70,13 @@ public class WebCrawler {
 
     /**
      * Extracts the required data from given URL and XPath expression.
+     * @param URL given url
      * @param xPath XPath expression to given HTML Element
      *
      * @return found data from given arguments
      */
-    public String extractContent(String xPath) throws IOException {
-        WebClient client = getWebClient();
-        page = client.getPage(URL);
+    public String extractContent(String URL, String xPath) throws IOException {
+        page = webClient.getPage(URL);
 
         return page.getByXPath(xPath).toString();
     }
