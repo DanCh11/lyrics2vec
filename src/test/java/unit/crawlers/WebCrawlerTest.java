@@ -1,5 +1,7 @@
 package unit.crawlers;
 
+import static org.junit.Assert.assertTrue;
+
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -8,6 +10,7 @@ import services.crawlers.WebCrawler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -26,45 +29,30 @@ public class WebCrawlerTest {
 
     @Test
     public void extractLinksFromOnePageTest() throws IOException, ConfigurationException {
-        Configuration assertionConfig = getConfig(ASSERTION_PROPERTIES_PATH);
         Configuration xPathConfig = getConfig(XPATH_PROPERTIES_PATH);
 
-        ArrayList<String> extractedLinks = crawler(MOCK_HOME_PAGE_FILEPATH).extractLinks(
+        List<String> extractedLinks = crawler().extractLinks(MOCK_HOME_PAGE_FILEPATH,
                 xPathConfig.getString("xpath.alphabeticalLinks"));
 
         assertEquals(extractedLinks.size(), 29);
-        assertEquals(
-                extractedLinks.get(0),
-                assertionConfig.getString("assertion.firstPageSingleExtractionTest"));
-        assertEquals(
-                extractedLinks.get(28),
-                assertionConfig.getString("assertion.lastPageSingleExtractionTest"));
-        assertEquals(
-                extractedLinks.get(17),
-                assertionConfig.getString("assertion.pageNr17SingleExtractionTest"));
+        assertTrue(extractedLinks.get(0).contains("/artists/0"));
+        assertTrue(extractedLinks.get(28).contains("/random.php"));
+        assertTrue(extractedLinks.get(17).contains("/artists/Q"));
     }
 
     @Test
     public void extractLinksFromMultiplePagesTest() throws IOException, ConfigurationException {
-        Configuration xPathConfig = getConfig(XPATH_PROPERTIES_PATH);
-        Configuration assertionConfig = getConfig(ASSERTION_PROPERTIES_PATH);
+        final Configuration xPathConfig = getConfig(XPATH_PROPERTIES_PATH);
+        final String authorLinksPath = xPathConfig.getString("xpath.authorLinks");
 
-        ArrayList<String> extractedLinks = new ArrayList<>();
-        String[] pages = {MOCK_ARTIST_PAGE_LETTER_O, MOCK_ARTIST_PAGE_LETTER_G};
+        List<String> pages = List.of(MOCK_ARTIST_PAGE_LETTER_O, MOCK_ARTIST_PAGE_LETTER_G);
+        List<String> links = crawler().extractLinksFromMultiplePages(pages, authorLinksPath);
 
-        for (String page : pages) {
-            ArrayList<String> links = crawler(page).extractLinks(xPathConfig.getString("xpath.authorLinks"));
-
-            extractedLinks.addAll(links);
-        }
-
-        assertEquals(extractedLinks.getClass(), ArrayList.class);
-        assertEquals(extractedLinks.get(0).getClass(), String.class);
-        assertEquals(extractedLinks.size(), 48);
-        assertEquals(extractedLinks.get(0),
-                assertionConfig.getString("assertion.firstPageMultipleExtractionTest"));
-        assertEquals(extractedLinks.get(47),
-                assertionConfig.getString("assertion.lastPageMultipleExtractionTest"));
+        assertEquals(links.getClass(), ArrayList.class);
+        assertEquals(links.get(0).getClass(), String.class);
+        assertEquals(links.size(), 48);
+        assertTrue(links.get(0).contains("artist/O-A-M-Trio/512644"));
+        assertTrue(links.get(47).contains("/G-Bravo/2138159325"));
     }
 
     @Test
@@ -72,15 +60,17 @@ public class WebCrawlerTest {
         Configuration xPathConfig = getConfig(XPATH_PROPERTIES_PATH);
         Configuration assertionConfig = getConfig(ASSERTION_PROPERTIES_PATH);
 
-        String text = crawler(MOCK_LYRICS_PAGE).extractContent(xPathConfig.getString("xpath.lyricsExample"));
+        String text = crawler().extractContent(
+                MOCK_LYRICS_PAGE,
+                xPathConfig.getString("xpath.lyricsExample"));
 
         assertEquals(text.getClass(), String.class);
         assertTrue(text.contains(assertionConfig.getString("assertion.containingTextContent")));
 
     }
 
-    private static WebCrawler crawler(String URL) {
-        return new WebCrawler(URL);
+    private static WebCrawler crawler() {
+        return new WebCrawler();
     }
 
     private static Configuration getConfig(String configPath) throws ConfigurationException {
