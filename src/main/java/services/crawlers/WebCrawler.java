@@ -5,7 +5,6 @@ import static org.htmlunit.util.UrlUtils.resolveUrl;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
-import org.htmlunit.util.UrlUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
