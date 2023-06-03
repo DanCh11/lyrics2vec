@@ -1,135 +1,116 @@
 package services.crawlers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import models.Song;
-
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.htmlunit.BrowserVersion;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LyricsCrawler {
-    private final Configurations configs = new Configurations();
-    private static final String XPATH_CONFIG_FILE_PATH = "src/main/resources/properties/xpath.properties";
-    private static final String FILEPATH_CONFIG_FILE_PATH = "src/main/resources/properties/filepath.properties";
-    private static final String HTML_ELEMENTS_CONFIG_FILE_PATH = "src/main/resources/properties/HTMLElement.properties";
-    private final Configuration xpathConfig = configs.properties(new File(XPATH_CONFIG_FILE_PATH));
-    private final Configuration filepathConfig = configs.properties(new File(FILEPATH_CONFIG_FILE_PATH));
-    private final Configuration htmlElementsConfig = configs.properties(new File(HTML_ELEMENTS_CONFIG_FILE_PATH));
-    private final String HOME_URL = xpathConfig.getString("xpath.url.homeURL");
-    private final String ALPHABETICAL_LINKS_XPATH = xpathConfig.getString("xpath.alphabeticalLinks");
-    private final String AUTHOR_LINKS_XPATH = xpathConfig.getString("xpath.authorLinks");
-    private final String SONGS_LINKS_XPATH = xpathConfig.getString("xpath.songLinks");
-    private final String ALL_ARTISTS_ENDPOINT = xpathConfig.getString("xpath.endpoint.allArtists");
-    private final String SONG_NAME_TAG_ID = htmlElementsConfig.getString("HTMLElement.songName.tagID");
-    private final String SONG_LYRICS_TAG_ID = htmlElementsConfig.getString("HTMLElement.songLyrics.tagID");
-    private final String JSON_FILEPATH = filepathConfig.getString("filepath.songsJSON");
+    private static final String XPATH_PROPERTIES_PATH = "src/main/resources/properties/xpath.properties";
+    private static WebClient webClient;
 
-    private HtmlPage page;
-
-    public LyricsCrawler() throws IOException, ConfigurationException {;
-        page = getWebPage(HOME_URL);
-
+    public LyricsCrawler() {
+        webClient = getWebClient();
     }
 
-    /**
-     * Address the Web Client and its parameters.
-     * @param url the link that will be transformed into HTMLPage object.
-     *
-     * @return HTMLPage Object from given URL
-     */
-    private HtmlPage getWebPage(String url) throws IOException {
-        try (WebClient webClient = new WebClient(BrowserVersion.EDGE)) {
-            webClient.getOptions().setJavaScriptEnabled(false);
+    public void crawlLyrics() {
+        try {
+            final String homeURL = getConfig().getString("url.homeURL");
+            final String lettersXPath = getConfig().getString("xpath.letterLinks");
+            HtmlPage homepage = webClient.getPage(homeURL);
+            List<HtmlAnchor> letterLinks = homepage.getByXPath(lettersXPath);
+
+            for (HtmlAnchor letterLink : letterLinks) {
+                if (letterLink != null) {
+                    crawlArtists(letterLink);
+                }
+            }
+
+        } catch (ConfigurationException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void crawlArtists(HtmlAnchor letterLink) {
+        try {
+            final String allArtistsEndpoint = getConfig().getString("xpath.endpoint.allArtists");
+            final String artistLinksXPath = getConfig().getString("xpath.artistLinks");
+            HtmlPage letterPage = letterLink.click();
+            List<HtmlAnchor> artistLists = letterPage.getByXPath(allArtistsEndpoint);
+
+            for (HtmlAnchor artistList : artistLists) {
+                HtmlPage artistPage = artistList.click();
+                List<HtmlAnchor> artists = artistPage.getByXPath(artistLinksXPath);
+
+                for (HtmlAnchor artist : artists) {
+                    crawlSongs(artist);
+                }
+            }
+
+        } catch (ConfigurationException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void crawlSongs(HtmlAnchor artist) {
+        try {
+            final String songLinksXPath = getConfig().getString("xpath.songLinks");
+            HtmlPage artistPage = artist.click();
+            List<HtmlAnchor> songs = artistPage.getByXPath(songLinksXPath);
+
+            for (HtmlAnchor song : songs) {
+                Map<String, List<String>> recordSet = extractRecord(song);
+                System.out.println(recordSet);
+            }
+
+        } catch (ConfigurationException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Map<String, List<String>> extractRecord(HtmlAnchor song) {
+        try {
+            Map<String, List<String>> recordSet = new HashMap<>();
+
+            final String artistNameXPath = getConfig().getString("xpath.artistName");
+            final String songNameXPath = getConfig().getString("xpath.songName");
+            final String lyricsXPath = getConfig().getString("xpath.lyrics");
+
+            HtmlPage songPage = song.click();
+            String artistName = songPage.getByXPath(artistNameXPath).toString();
+            String songName = songPage.getByXPath(songNameXPath).toString();
+            String lyrics = songPage.getByXPath(lyricsXPath).toString();
+
+            recordSet.put(artistName, List.of(songName, lyrics));
+
+            return recordSet;
+
+        } catch (ConfigurationException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static WebClient getWebClient() {
+        if (webClient == null) {
+            webClient = new WebClient();
             webClient.getOptions().setCssEnabled(false);
-
-            return webClient.getPage(url);
+            webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            webClient.getOptions().setRedirectEnabled(true);
         }
+        return webClient;
     }
 
-    /**
-     * Extracts alphabetical links from home page.
-     *
-     * @return a list of extracted links
-     */
-    private List<String> extractAlphabeticalLinks() {
-        List<String> extractedLinks = new ArrayList<>();
-        List<HtmlAnchor> links = page.getByXPath(ALPHABETICAL_LINKS_XPATH);
+    private static Configuration getConfig() throws ConfigurationException {
+        Configurations config = new Configurations();
 
-        for (HtmlAnchor link : links) {
-            if (link != null) {
-                String href = link.getHrefAttribute();
-                extractedLinks.add(HOME_URL + href + ALL_ARTISTS_ENDPOINT);
-            }
-        }
-        return extractedLinks;
-    }
-
-    /**
-     * Extracts links to authors' pages from alphabetical links.
-     *
-     * @return a list with URLs from given list.
-     */
-    private List<String> extractAuthorLinks() throws IOException {
-        List<String> extractedLinks = new ArrayList<>();
-
-        for (String url : extractAlphabeticalLinks()) {
-            page = getWebPage(url);
-            List<HtmlAnchor> links = page.getByXPath(AUTHOR_LINKS_XPATH);
-
-            for (HtmlAnchor link : links) {
-                if (link != null) {
-                    String href = link.getHrefAttribute();
-                    extractedLinks.add(HOME_URL + href);
-                }
-            }
-        }
-        return extractedLinks;
-    }
-
-    /**
-     * Extracts links to songs' pages from urls of authors.
-     *
-     * @return a list with URLs from given list.
-     */
-    private List<String> extractSongsLinks() throws IOException {
-        List<String> extractedLinks = new ArrayList<>();
-
-        for (String url : extractAuthorLinks()) {
-            page = getWebPage(url);
-            List<HtmlAnchor> links = page.getByXPath(SONGS_LINKS_XPATH);
-
-            for (HtmlAnchor link : links) {
-                if (link != null) {
-                    String href = link.getHrefAttribute();
-                    extractedLinks.add(HOME_URL + href);
-                }
-            }
-        }
-        return extractedLinks;
-    }
-
-    public void extractContent(List<String> urls) throws IOException {
-
-        for (String url : urls) {
-            Song song = new Song();
-            page = getWebPage(url);
-
-            song.setName(page.getHtmlElementById(SONG_NAME_TAG_ID).asNormalizedText());
-            song.setLyrics(page.getElementById(SONG_LYRICS_TAG_ID).asNormalizedText());
-
-            ObjectMapper mapper = new ObjectMapper();
-
-            mapper.writeValue(new File(JSON_FILEPATH), song);
-
-        }
+        return config.properties(XPATH_PROPERTIES_PATH);
     }
 }
