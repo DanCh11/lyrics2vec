@@ -31,8 +31,8 @@ public class WebCrawlerTest {
     public void extractLinksFromOnePageTest() throws IOException, ConfigurationException {
         Configuration xPathConfig = getConfig(XPATH_PROPERTIES_PATH);
 
-        List<String> extractedLinks = crawler().extractLinks(MOCK_HOME_PAGE_FILEPATH,
-                xPathConfig.getString("xpath.alphabeticalLinks"));
+        List<String> extractedLinks = crawler().extractLinks(
+                xPathConfig.getString("xpath.letterLinks"));
 
         assertEquals(extractedLinks.size(), 29);
         assertTrue(extractedLinks.get(0).contains("/artists/0"));
@@ -43,7 +43,7 @@ public class WebCrawlerTest {
     @Test
     public void extractLinksFromMultiplePagesTest() throws IOException, ConfigurationException {
         final Configuration xPathConfig = getConfig(XPATH_PROPERTIES_PATH);
-        final String authorLinksPath = xPathConfig.getString("xpath.authorLinks");
+        final String authorLinksPath = xPathConfig.getString("xpath.artistLinks");
 
         List<String> pages = List.of(MOCK_ARTIST_PAGE_LETTER_O, MOCK_ARTIST_PAGE_LETTER_G);
         List<String> links = crawler().extractLinksFromMultiplePages(pages, authorLinksPath);
@@ -70,7 +70,7 @@ public class WebCrawlerTest {
     }
 
     private static WebCrawler crawler() {
-        return new WebCrawler();
+        return new WebCrawler(WebCrawlerTest.MOCK_HOME_PAGE_FILEPATH);
     }
 
     private static Configuration getConfig(String configPath) throws ConfigurationException {
