@@ -1,8 +1,11 @@
 package services.crawlers;
 
+import static org.htmlunit.util.UrlUtils.resolveUrl;
+
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
+import org.htmlunit.util.UrlUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,31 +18,28 @@ public class WebCrawler {
     private static WebClient webClient = getWebClient();
     private static HtmlPage page;
 
-    private static WebClient getWebClient() {
-        if (webClient == null) {
-            webClient = new WebClient();
-            webClient.getOptions().setCssEnabled(false);
-            webClient.getOptions().setJavaScriptEnabled(false);
-            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-        }
-        return webClient;
+    private final String BaseURL;
+
+    public WebCrawler(String BaseURL) {
+        this.BaseURL = BaseURL;
     }
+
 
     /**
      * Extracts links from given URL and XPath.
-     * @param URL given URL
      * @param xPath XPath expression to given HTML Element
      * @return a list of extracted links.
      */
-    public List<String> extractLinks(String URL, String xPath) throws IOException {
+    public List<String> extractLinks(String xPath) throws IOException {
         List<String> extractedLinks = new ArrayList<>();
-        page = webClient.getPage(URL);
+        page = webClient.getPage(BaseURL);
         List<HtmlAnchor> links = page.getByXPath(xPath);
 
         for (HtmlAnchor link : links) {
             if (link != null) {
-                String href = link.getHrefAttribute();
-                extractedLinks.add(URL + href);
+                String href = link.getAttribute("href");
+                String absoluteURL = resolveUrl(page.getBaseURL(), href);
+                extractedLinks.add(absoluteURL);
             }
         }
         return extractedLinks;
@@ -56,12 +56,14 @@ public class WebCrawler {
 
         for (String URL : URLS) {
             page = webClient.getPage(URL);
+            webClient.getCache().setMaxSize(0);
             List<HtmlAnchor> links = page.getByXPath(xPath);
 
             for (HtmlAnchor link : links) {
                 if (link != null) {
                     String href = link.getHrefAttribute();
-                    extractedLinks.add(URL + href);
+                    String absoluteURL = resolveUrl(page.getBaseURL(), href);
+                    extractedLinks.add(absoluteURL);
                 }
             }
         }
@@ -77,7 +79,19 @@ public class WebCrawler {
      */
     public String extractContent(String URL, String xPath) throws IOException {
         page = webClient.getPage(URL);
+        webClient.getCache().setMaxSize(0);
 
         return page.getByXPath(xPath).toString();
+    }
+
+    private static WebClient getWebClient() {
+        if (webClient == null) {
+            webClient = new WebClient();
+            webClient.getOptions().setCssEnabled(false);
+            webClient.getOptions().setJavaScriptEnabled(false);
+            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            webClient.getOptions().setRedirectEnabled(true);
+        }
+        return webClient;
     }
 }
