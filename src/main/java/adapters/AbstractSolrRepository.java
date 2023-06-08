@@ -1,5 +1,5 @@
 package adapters;
-;
+
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 
