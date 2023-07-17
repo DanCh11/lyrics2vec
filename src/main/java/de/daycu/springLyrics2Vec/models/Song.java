@@ -1,6 +1,5 @@
-package models;
+package de.daycu.springLyrics2Vec.models;
 
-import lombok.Builder;
 import lombok.Data;
 
 @Data
