@@ -1,15 +1,32 @@
 package de.daycu.springLyrics2Vec.models;
 
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
-import java.util.List;
+import java.util.UUID;
 
 @Data
-@AllArgsConstructor
+@Entity
+@ToString
+@Table(name = "RECORD")
 public class Record {
-    private String id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "ID")
+    private UUID id;
+    @Column(name = "ARTIST_NAME")
     private String artistName;
-    private String song;
+    @Column(name = "SONG_NAME")
+    private String songName;
+    @Column(name = "LYRICS")
     private String lyrics;
+
+    public Record(String artistName, String songName, String lyrics) {
+        this.artistName = artistName;
+        this.songName = songName;
+        this.lyrics = lyrics;
+    }
+
+
 }

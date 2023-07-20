@@ -9,10 +9,12 @@ import java.util.List;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
+import org.springframework.stereotype.Component;
 
 /**
  * This class uses a web client to extract necessary information from given website.
  */
+@Component
 public class WebCrawler {
 	
 	private final WebClient webClient;

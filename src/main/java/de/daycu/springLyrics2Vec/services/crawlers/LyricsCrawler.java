@@ -1,14 +1,19 @@
 package de.daycu.springLyrics2Vec.services.crawlers;
 
+import de.daycu.springLyrics2Vec.models.Record;
+import de.daycu.springLyrics2Vec.services.RecordService;
+import lombok.AllArgsConstructor;
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+@Component
+@AllArgsConstructor
 public class LyricsCrawler {
 
     private static final String HOME_URL = "https://www.lyrics.com/";
@@ -21,6 +26,11 @@ public class LyricsCrawler {
     private static final String SONG_NAME_XPATH = "//*[@id='lyric-title-text']/text()";
     private static final String LYRICS_XPATH = "//*[@id='lyric-body-text']/text()";
     private final WebClient webClient;
+
+    @Autowired
+    private RecordService service;
+    @Autowired
+    private WebCrawler crawler;
 
     public LyricsCrawler() {
         webClient = new WebClient();
@@ -61,23 +71,20 @@ public class LyricsCrawler {
         List<HtmlAnchor> songs = artistPage.getByXPath(SONG_LINKS_XPATH);
 
         for (HtmlAnchor song : songs) {
-            Map<String, List<String>> recordSet = extractRecord(song);
+            Record recordSet = extractRecord(song);
             System.out.println(recordSet);
         }
     }
 
-    private Map<String, List<String>> extractRecord(HtmlAnchor song) throws IOException {
-        Map<String, List<String>> recordSet = new HashMap<>();
-
+    private Record extractRecord(HtmlAnchor song) throws IOException {
         HtmlPage songPage = song.click();
+        List<String> recordXPaths = List.of(ARTIST_LINKS_XPATH, SONG_LINKS_XPATH, LYRICS_XPATH);
         String artistName = songPage.getByXPath(ARTIST_NAME_XPATH).toString();
         String songName = songPage.getByXPath(SONG_NAME_XPATH).toString();
         String lyrics = songPage.getByXPath(LYRICS_XPATH).toString();
 
-        recordSet.put(artistName, List.of(songName, lyrics));
-
-        return recordSet;
-
+        return service.save(
+                new Record(artistName, songName, lyrics));
     }
-
 }
+

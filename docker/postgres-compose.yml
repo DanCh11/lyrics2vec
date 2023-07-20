@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  db:
+    image: postgres
+    container_name: local_postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: daycu
+      POSTGRES_PASSWORD: 123121
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dan.ch@da.com
+      PGADMIN_DEFAULT_PASSWORD: 123121
