@@ -7,8 +7,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: daycu
-      POSTGRES_PASSWORD: 123121
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
 
   pgadmin:
     image: dpage/pgadmin4
@@ -16,6 +17,8 @@ services:
     restart: always
     ports:
       - "8888:80"
+    depends_on:
+      - 'postgres'
     environment:
-      PGADMIN_DEFAULT_EMAIL: dan.ch@da.com
-      PGADMIN_DEFAULT_PASSWORD: 123121
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
