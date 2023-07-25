@@ -78,7 +78,7 @@ public class LyricsCrawler {
 
     private Record extractRecord(HtmlAnchor song) throws IOException {
         HtmlPage songPage = song.click();
-        List<String> recordXPaths = List.of(ARTIST_LINKS_XPATH, SONG_LINKS_XPATH, LYRICS_XPATH);
+//        List<String> recordXPaths = List.of(ARTIST_LINKS_XPATH, SONG_LINKS_XPATH, LYRICS_XPATH);
         String artistName = songPage.getByXPath(ARTIST_NAME_XPATH).toString();
         String songName = songPage.getByXPath(SONG_NAME_XPATH).toString();
         String lyrics = songPage.getByXPath(LYRICS_XPATH).toString();
