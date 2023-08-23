@@ -25,7 +25,6 @@ public class LyricsCrawler {
     private static final String ARTIST_NAME_XPATH = "//*[@id=\"content-body\"]/div[1]/div[1]/hgroup/h3/text()";
     private static final String SONG_NAME_XPATH = "//*[@id='lyric-title-text']/text()";
     private static final String LYRICS_XPATH = "//*[@id='lyric-body-text']/text()";
-    private final WebClient webClient;
 
     @Autowired
     private RecordService service;
@@ -33,58 +32,59 @@ public class LyricsCrawler {
     private WebCrawler crawler;
 
     public LyricsCrawler() {
-        webClient = new WebClient();
-        webClient.getOptions().setCssEnabled(false);
-        webClient.getOptions().setJavaScriptEnabled(false);
-        webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-        webClient.getOptions().setRedirectEnabled(true);
+        crawler = new WebCrawler();
     }
 
     public void crawlLyrics() throws IOException {
-        HtmlPage homepage = webClient.getPage(HOME_URL);
-        List<HtmlAnchor> letterLinks = homepage.getByXPath(LETTERS_LINKS_XPATH);
+        List<String> letterLinks = crawler.extractLinks(HOME_URL, LETTERS_LINKS_XPATH);
 
-        for (HtmlAnchor letterLink : letterLinks) {
+        for (String letterLink : letterLinks) {
+            System.out.println("Letter link: " + letterLink);
             if (letterLink != null) {
                 crawlArtists(letterLink);
             }
         }
     }
 
-    public void crawlArtists(HtmlAnchor letterLink) throws IOException {
-        HtmlPage letterPage = letterLink.click();
-        List<HtmlAnchor> artistLists = letterPage.getByXPath(ALL_ARTISTS_XPATH);
+    public void crawlArtists(String letterLink) throws IOException {
+        List<String> artistLists = crawler.extractLinks(letterLink, ALL_ARTISTS_XPATH);
 
-        for (HtmlAnchor artistList : artistLists) {
-            HtmlPage artistPage = artistList.click();
-            List<HtmlAnchor> artists = artistPage.getByXPath(ARTIST_LINKS_XPATH);
+        for (String artistList : artistLists) {
+            List<String> artists = crawler.extractLinks(artistList, ARTIST_LINKS_XPATH);
 
-            for (HtmlAnchor artist : artists) {
-                System.out.println(artist);
+            for (String artist : artists) {
                 crawlSongs(artist);
             }
         }
     }
 
-    public void crawlSongs(HtmlAnchor artist) throws IOException {
-        HtmlPage artistPage = artist.click();
-        List<HtmlAnchor> songs = artistPage.getByXPath(SONG_LINKS_XPATH);
+    public void crawlSongs(String artist) throws IOException {
+        List<String> songs = crawler.extractLinks(artist, SONG_LINKS_XPATH);
 
-        for (HtmlAnchor song : songs) {
+        for (String song : songs) {
+            System.out.println("Song: " + song);
             Record recordSet = extractRecord(song);
             System.out.println(recordSet);
         }
     }
 
-    private Record extractRecord(HtmlAnchor song) throws IOException {
-        HtmlPage songPage = song.click();
+    private Record extractRecord(String song) throws IOException {
+//        HtmlPage songPage = song.click();
 //        List<String> recordXPaths = List.of(ARTIST_LINKS_XPATH, SONG_LINKS_XPATH, LYRICS_XPATH);
-        String artistName = songPage.getByXPath(ARTIST_NAME_XPATH).toString();
-        String songName = songPage.getByXPath(SONG_NAME_XPATH).toString();
-        String lyrics = songPage.getByXPath(LYRICS_XPATH).toString();
+        List<HtmlAnchor> elements = crawler.extractContent(song, ARTIST_NAME_XPATH);
+        System.out.println("Song link from extractRecord: " + song);
+        System.out.println("Artist name: " + elements.get(0).asNormalizedText());
 
-        return service.save(
-                new Record(artistName, songName, lyrics));
+//        elements = crawler.extractContent(song, SONG_NAME_XPATH);
+//        String songName = elements.get(1).asNormalizedText();
+//
+//        elements = crawler.extractContent(song, LYRICS_XPATH);
+//        String lyrics = elements.get(1).asNormalizedText();
+
+//        return service.save(
+//                new Record(artistName, songName, lyrics));
+
+        return new Record("", "", "");
     }
 }
 

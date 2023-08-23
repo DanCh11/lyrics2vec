@@ -5,6 +5,7 @@ import static org.htmlunit.util.UrlUtils.resolveUrl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.htmlunit.WebClient;
 import org.htmlunit.html.HtmlAnchor;
@@ -81,11 +82,11 @@ public class WebCrawler {
 	 *
 	 * @return found data from given arguments
 	 */
-	public String extractContent(String URL, String xPath) throws IOException {
+	public List<HtmlAnchor> extractContent(String URL, String xPath) throws IOException {
 		page = webClient.getPage(URL);
 		webClient.getCache().setMaxSize(0);
 
-		return page.getByXPath(xPath).toString();
+		return page.getByXPath(xPath);
 	}
 	
 

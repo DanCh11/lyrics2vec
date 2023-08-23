@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import org.htmlunit.html.HtmlAnchor;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -66,9 +68,9 @@ public class WebCrawlerTest {
 
 	@Test
 	public void extractContentTest() throws IOException {
-        String text = crawler.extractContent(MOCK_SONG_PAGE, LYRICS_XPATH);
+        List<HtmlAnchor> text = crawler.extractContent(MOCK_SONG_PAGE, LYRICS_XPATH);
 
-        assertEquals(text.getClass(), String.class);
+        assertEquals(text.toString().getClass(), String.class);
         assertTrue(text.contains(SONG_LYRICS));
     }
 }
